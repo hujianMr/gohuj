@@ -5,9 +5,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp; gohuj项目是使用go语言开发的一套微服务注册中心，基于raft协议来实现分布式一致性的leader选举
 
 ### 实现的功能：  
- 1.基于raft协议leader选举  
- 2.服务注册  
- 3.服务发现  
+ 1. 基于raft协议leader选举  
+ 2. 服务注册  
+ 3. 服务发现  
 
 ### 启动文件 
  main包下面的Gohuj.go文件  
