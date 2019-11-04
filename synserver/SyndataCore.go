@@ -65,7 +65,7 @@ func synf(w http.ResponseWriter, req *http.Request) {
 /**
   异步开启同步数据
 */
-func AsynBroadcast(serverNode ServerNode, data SyncData, broadcastSign *sync.WaitGroup, channel chan string) {
+/*func AsynBroadcast(serverNode ServerNode, data SyncData, broadcastSign *sync.WaitGroup, channel chan string) {
 	defer broadcastSign.Done()
 	bytesData, _ := json.Marshal(data)
 	resp, _ := http.Post("http://"+serverNode.Url+"/synlogdata", "application/json", bytes.NewReader(bytesData))
@@ -77,7 +77,7 @@ func AsynBroadcast(serverNode ServerNode, data SyncData, broadcastSign *sync.Wai
 	} else {
 		channel <- "NO"
 	}
-}
+}*/
 
 //发送同步leader节点数据  http请求  异步   要做到至少需要半数节点同意  不在这里实现  这里是客户端发送请求直接认为成功 后台异步同步给fllower
 func Sendsynf() {
@@ -89,7 +89,20 @@ func Sendsynf() {
 		broadcastSign.Add(serverLen)
 		//异步获取所有请求结果
 		for i := 0; i < serverLen; i++ {
-			go AsynBroadcast(serverNodes[i], data, &broadcastSign, channel)
+			go func(serverNode ServerNode, data SyncData, broadcastSign *sync.WaitGroup, channel chan string) {
+				defer broadcastSign.Done()
+				bytesData, _ := json.Marshal(data)
+				resp, _ := http.Post("http://"+serverNode.Url+"/synlogdata", "application/json", bytes.NewReader(bytesData))
+				if resp != nil && resp.StatusCode == 200 {
+					body, _ := ioutil.ReadAll(resp.Body)
+					fmt.Println("接收日志同步: " + string(body))
+					channel <- string(body)
+					_ = resp.Body.Close()
+				} else {
+					channel <- "NO"
+				}
+			}(serverNodes[i], data, &broadcastSign, channel)
+			//go AsynBroadcast(serverNodes[i], data, &broadcastSign, channel)
 		}
 		broadcastSign.Wait()
 		close(channel)
